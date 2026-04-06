@@ -34,6 +34,7 @@ import SupportsTakeoffForm        from "./components/takeoff/SupportsTakeoffForm
 import EquipConnTakeoffForm       from "./components/takeoff/EquipConnTakeoffForm";
 import SpecialtyTakeoffForm       from "./components/takeoff/SpecialtyTakeoffForm";
 import GroundingTakeoffForm       from "./components/takeoff/GroundingTakeoffForm";
+import TempItemsTakeoffForm       from "./components/takeoff/TempItemsTakeoffForm";
 import SectionBreakdownModal, { type SectionBreakdown } from "./components/SectionBreakdownModal";
 import CommoditySheetModal   from "./components/CommoditySheetModal";
 import CommodityAgeDialog    from "./components/CommodityAgeDialog";
@@ -720,6 +721,17 @@ New job name:`, `${activeProject.name} (Copy)`);
           sectionBreakdown={sectionBreakdown}
           onCommit={handleCommitTakeoff}
           onClose={() => setTakeoffCategory(null)}
+        />
+      )}
+
+      {takeoffCategory === "Temporary Items" && activeProject && (
+        <TempItemsTakeoffForm
+          projectId={activeProject.id}
+          defaultMarkup={defaultMarkup}
+          defaultLaborRate={defaultLaborRate}
+          sectionBreakdown={sectionBreakdown}
+          onCommit={handleCommitTakeoff}
+          onCancel={() => setTakeoffCategory(null)}
         />
       )}
 

@@ -111,7 +111,7 @@ const FIXTURE_BOX_ASSEMBLY: Record<string, { description: string; item_number: s
 };
 
 const emptyAcc = (): AccessoryRow => ({
-  description: "", qty: 1, unitCost: 0, laborHrs: 0, assemblyId: null,
+  description: "", qty: 1, unitCost: 0, laborHrs: 0, assemblyId: null, priceUnit: "E",
 });
 
 interface Props {
@@ -178,6 +178,7 @@ export default function LightsTakeoffForm({
           unitCost: match?.unit_price ?? 0,
           laborHrs: match?.labor_2 ?? match?.labor_1 ?? 0,
           assemblyId: match?.id ?? null,
+          priceUnit: match?.price_unit ?? "E",
         }))
       )
     ).then(resolved => {
@@ -378,7 +379,7 @@ export default function LightsTakeoffForm({
                 key={a.label}
                 onClick={() => setAccessories(prev => [
                   ...prev,
-                  { description: a.description, qty: a.qty, unitCost: 0, laborHrs: 0, assemblyId: null },
+                  { description: a.description, qty: a.qty, unitCost: 0, laborHrs: 0, assemblyId: null, priceUnit: "E" },
                 ])}
                 style={{ background: "var(--bg-surface)", border: "1px solid var(--border-strong)", color: "var(--text-secondary)", fontSize: 11, padding: "3px 10px", borderRadius: "var(--r-sm)", cursor: "pointer" }}
               >

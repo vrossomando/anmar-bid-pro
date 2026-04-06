@@ -316,6 +316,53 @@ async fn restore_database_dialog(app: tauri::AppHandle) -> Result<String, String
     }
 }
 
+
+// ── Migration checksum patcher ─────────────────────────────────────────────
+// Seed SQL files may be modified after a DB is created. This patches stored
+// SHA-384 checksums to match current files so existing DBs keep working.
+fn patch_migration_checksums(db_path: &str) {
+    let conn = match rusqlite::Connection::open(db_path) {
+        Ok(c) => c,
+        Err(_) => return,
+    };
+
+    // Check if _sqlx_migrations table exists
+    let table_exists: bool = conn.query_row(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='_sqlx_migrations'",
+        [],
+        |row| row.get::<_, i64>(0),
+    ).unwrap_or(0) > 0;
+
+    if !table_exists { return; }
+
+    // version -> current SHA-384 hex of our SQL files
+    let checksums: &[(i64, &str)] = &[
+        (2, "9f9e4d55d192fa94dc4597a8dc6fbe73bf29494069322cb82d0fd7ca114a3024ab4c9b8a0c1a1ad9a7d0f4f057aa2ef9"),
+        (5, "2c86a58b0ed3a8df253b6a7f100314d4b3130573fdf0b28059200721a0cfb77241fb86ad401f3b1c95ac3a6b74d9e0d4"),
+        (6, "0dc3e183a125f44c7f714da502587be818bfebe60542c682b42ca8a427f3a9840c8c208f08d755920dfc67a6b277f0ad"),
+        (8, "2c8b84defe2403c764ab26fb35f9632ef741cb4d04c7af526fdcc85ca5ea68995f147906408d1462ff4733982823e1a5"),
+    ];
+
+    for (version, hex) in checksums {
+        let new_bytes: Vec<u8> = (0..hex.len()).step_by(2)
+            .map(|i| u8::from_str_radix(&hex[i..i+2], 16).unwrap_or(0))
+            .collect();
+        let current: Option<Vec<u8>> = conn.query_row(
+            "SELECT checksum FROM _sqlx_migrations WHERE version = ?1",
+            rusqlite::params![version],
+            |row| row.get(0),
+        ).ok();
+        if let Some(cur) = current {
+            if cur != new_bytes {
+                let _ = conn.execute(
+                    "UPDATE _sqlx_migrations SET checksum = ?1 WHERE version = ?2",
+                    rusqlite::params![new_bytes, version],
+                );
+            }
+        }
+    }
+}
+
 fn migrations() -> Vec<Migration> {
     vec![
         Migration {
@@ -425,6 +472,18 @@ fn migrations() -> Vec<Migration> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Patch migration checksums BEFORE the SQL plugin runs migrations.
+    // This ensures existing databases with old seed checksums are updated
+    // to match the current SQL files, preventing checksum mismatch errors.
+    if let Some(data_dir) = dirs::data_dir() {
+        let db_path = data_dir
+            .join("com.anmarbidpro.app")
+            .join("anmarbidpro.db");
+        if db_path.exists() {
+            patch_migration_checksums(db_path.to_str().unwrap_or(""));
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

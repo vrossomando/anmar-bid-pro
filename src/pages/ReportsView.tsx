@@ -14,7 +14,7 @@ import {
 } from "../hooks/reportUtils";
 
 type ReportType = "Extensions" | "Material List" | "Material Totals" | "Labor Hours" |
-  "Quotes" | "Sales Tax" | "Totals" | "Select Bid Summary";
+  "Quotes" | "Sales Tax" | "Totals" | "Select Bid Summary" | "Totals by Section";
 
 type DetailPanel = "labor-rates" | "non-quoted" | "quotes-detail" |
   "non-productive" | "job-expenses" | "subcontracts" | "overhead" |
@@ -139,7 +139,7 @@ export default function ReportsView({ projectId, initialReport, onBack }: Props)
   const totals = computeTotals(items, cfg);
   const rate   = blendedRate(cfg.crew);
 
-  const TABS: ReportType[] = ["Extensions", "Material List", "Quotes", "Totals", "Select Bid Summary"];
+  const TABS: ReportType[] = ["Extensions", "Material List", "Quotes", "Totals", "Totals by Section", "Select Bid Summary"];
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--bg-surface)", position: "relative" }}>
@@ -241,6 +241,7 @@ export default function ReportsView({ projectId, initialReport, onBack }: Props)
         {report === "Quotes"          && <QuotesReport          items={items} cfg={cfg} setCfg={setCfg} />}
         {report === "Sales Tax"       && <SalesTaxReport        items={items} cfg={cfg} totals={totals} />}
         {report === "Select Bid Summary" && <SelectBidSummary   project={project} items={items} cfg={cfg} setCfg={setCfg} totals={totals} rate={rate} setPanel={setPanel} />}
+        {report === "Totals by Section" && <TotalsBySectionReport items={items} cfg={cfg} rate={rate} />}
         {report === "Totals"          && (
           <TotalsReport
             project={project} items={items} cfg={cfg} setCfg={handleSetCfg}
@@ -1853,5 +1854,108 @@ function BidPriceInput({ value, onChange, placeholder, inputStyle }: {
       onBlur={handleBlur}
       style={inputStyle}
     />
+  );
+}
+
+// ── Totals by Section Report ────────────────────────────────────────────────
+function TotalsBySectionReport({ items, cfg, rate }: {
+  items: LineItem[];
+  cfg: LaborConfig;
+  rate: number;
+}) {
+  // Group line items by their takeoff category (first pipe-segment)
+  const grouped = new Map<string, LineItem[]>();
+  for (const item of items) {
+    const cat = parseCategory(item.category).category;
+    if (!grouped.has(cat)) grouped.set(cat, []);
+    grouped.get(cat)!.push(item);
+  }
+
+  // Sort categories: known ones first in a logical order, then alphabetical
+  const ORDER = [
+    "Lights", "Lighting", "Devices", "Conduit / Wire Feeders", "Cable",
+    "Gear", "Generator", "Grounding", "Temporary Power", "Temporary Items",
+    "Fire Alarm / Nurse Call", "Security / Intercom", "HVAC / Equip Connections",
+    "Supports", "Layout", "Punch List", "Miscellaneous Items", "Specialty Items",
+  ];
+  const sorted = [...grouped.keys()].sort((a, b) => {
+    const ai = ORDER.indexOf(a);
+    const bi = ORDER.indexOf(b);
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return a.localeCompare(b);
+  });
+
+  // Compute totals for a group of items
+  function sectionTotals(sItems: LineItem[]) {
+    let material = 0, laborHrs = 0, laborCost = 0;
+    for (const item of sItems) {
+      if (item.unit_cost === 0 && item.qty > 0) continue; // skip quote items
+      material  += item.ext_material ?? (item.qty * item.unit_cost * (1 + (item.markup_pct ?? 0) / 100));
+      laborHrs  += item.labor_hours ?? 0;
+      laborCost += item.ext_labor ?? ((item.labor_hours ?? 0) * rate);
+    }
+    return { material, laborHrs, laborCost };
+  }
+
+  // Grand totals
+  const grand = sectionTotals(items);
+
+  const cell: React.CSSProperties = {
+    padding: "10px 14px", fontSize: 13, borderBottom: "1px solid var(--border)",
+    textAlign: "right" as const,
+  };
+  const hdr: React.CSSProperties = {
+    ...cell, fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+    textTransform: "uppercase" as const, letterSpacing: "0.05em",
+    background: "var(--bg-surface)", borderBottom: "2px solid var(--border-strong)",
+  };
+
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ fontWeight: 700, fontSize: 16, color: "var(--text-primary)", marginBottom: 20 }}>
+        Totals by Section
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "white", borderRadius: 6, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+        <thead>
+          <tr>
+            <th style={{ ...hdr, textAlign: "left" }}>Category</th>
+            <th style={hdr}>Material Cost</th>
+            <th style={hdr}>Labor Hours</th>
+            <th style={hdr}>Labor Cost</th>
+            <th style={hdr}>Total Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((cat, idx) => {
+            const t = sectionTotals(grouped.get(cat)!);
+            const total = t.material + t.laborCost;
+            return (
+              <tr key={cat} style={{ background: idx % 2 === 0 ? "white" : "var(--bg-surface)" }}>
+                <td style={{ ...cell, textAlign: "left", fontWeight: 600, color: "var(--text-primary)" }}>{cat}</td>
+                <td style={cell}>${fmt(t.material)}</td>
+                <td style={cell}>{fmt(t.laborHrs)} hrs</td>
+                <td style={cell}>${fmt(t.laborCost)}</td>
+                <td style={{ ...cell, fontWeight: 700, color: "var(--text-primary)" }}>${fmt(total)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr style={{ background: "var(--accent)", color: "white" }}>
+            <td style={{ ...cell, textAlign: "left", fontWeight: 700, color: "white", borderBottom: "none" }}>Grand Total</td>
+            <td style={{ ...cell, fontWeight: 700, color: "white", borderBottom: "none" }}>${fmt(grand.material)}</td>
+            <td style={{ ...cell, fontWeight: 700, color: "white", borderBottom: "none" }}>{fmt(grand.laborHrs)} hrs</td>
+            <td style={{ ...cell, fontWeight: 700, color: "white", borderBottom: "none" }}>${fmt(grand.laborCost)}</td>
+            <td style={{ ...cell, fontWeight: 700, color: "white", borderBottom: "none" }}>${fmt(grand.material + grand.laborCost)}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style={{ marginTop: 10, fontSize: 11, color: "var(--text-muted)" }}>
+        * Quote items (items with $0 unit cost) are excluded from material totals.
+        Labor cost calculated at ${fmt(rate)}/hr.
+      </div>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import {
   FolderOpen, FilePlus, Edit, Trash2, RotateCcw, RefreshCw, BookOpen,
   FileText, Archive, Database, Settings, LogOut,
   Shield, Bell, Zap, Cable, Lightbulb, Package, HelpCircle, CheckCircle,
-  Sliders, Layers,
+  Sliders, Layers, Plus,
   BarChart2, List, DollarSign, Clock, Users, TrendingUp,
   Percent, FileCheck, Hash, Printer, GitBranch,
 } from "lucide-react";
@@ -230,6 +230,7 @@ export default function MenuBar({
             <BlueBtn label="Layout"           icon={<List size={14} />}        onClick={() => onTakeoff("Layout")}              disabled={!hasActiveJob} />
             <BlueBtn label="Punch List"       icon={<CheckCircle size={14} />} onClick={() => onTakeoff("Punch List")}          disabled={!hasActiveJob} />
             <BlueBtn label="Misc Items"       icon={<Package size={14} />}     onClick={() => onTakeoff("Miscellaneous Items")} disabled={!hasActiveJob} />
+            <BlueBtn label="Temp Items"       icon={<Plus size={14} />}        onClick={() => onTakeoff("Temporary Items")}     disabled={!hasActiveJob} />
             <BlueBtn label="Saved Assemblies" icon={<BookOpen size={14} />}    onClick={onSavedAssemblies}                     disabled={!hasActiveJob} />
             {!hasActiveJob && (
               <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.5)", borderRadius: "var(--r-sm)", fontSize: 11, color: "#445568", fontStyle: "italic", border: "1px dashed #7aaac8" }}>

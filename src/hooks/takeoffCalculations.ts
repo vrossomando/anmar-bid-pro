@@ -328,6 +328,7 @@ export interface AccessoryRow {
   unitCost: number;
   laborHrs: number;
   assemblyId: number | null;
+  priceUnit: string;     // "E", "C" (per 100), "M" (per 1000) — drives correct unit/qty on line item
 }
 
 export interface LightsInputs {
@@ -376,9 +377,17 @@ export function calculateLightsTakeoff(inputs: LightsInputs): TakeoffLineItem[] 
   // 2. Per-fixture accessories × quantity
   for (const acc of inputs.accessories) {
     if (!acc.description || acc.qty <= 0) continue;
+    const pu = (acc.priceUnit ?? "E").toUpperCase();
+    // Total raw count across all fixtures
+    const rawQty = acc.qty * quantity;
+    // For C/M items the line item qty is in hundreds/thousands, unit_cost is per-100/per-1000
+    const lineQty  = pu === "C" ? rawQty / 100
+                   : pu === "M" ? rawQty / 1000
+                   : rawQty;
+    const lineUnit = pu === "C" ? "C" : pu === "M" ? "M" : "ea";
     results.push(item(
       projectId, category, acc.description,
-      acc.qty * quantity, "ea",
+      lineQty, lineUnit,
       acc.unitCost, acc.laborHrs,
       laborRate, markupPct, acc.assemblyId, sort++
     ));
@@ -387,9 +396,14 @@ export function calculateLightsTakeoff(inputs: LightsInputs): TakeoffLineItem[] 
   // 3. Additional items — total quantity (not per-fixture)
   for (const add of inputs.additionalItems) {
     if (!add.description || add.qty <= 0) continue;
+    const pu = (add.priceUnit ?? "E").toUpperCase();
+    const lineQty  = pu === "C" ? add.qty / 100
+                   : pu === "M" ? add.qty / 1000
+                   : add.qty;
+    const lineUnit = pu === "C" ? "C" : pu === "M" ? "M" : "ea";
     results.push(item(
       projectId, category, add.description,
-      add.qty, "ea",
+      lineQty, lineUnit,
       add.unitCost, add.laborHrs,
       laborRate, markupPct, add.assemblyId, sort++
     ));
