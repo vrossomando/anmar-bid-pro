@@ -1,0 +1,32 @@
+[package]
+name = "estimator-app"
+version = "0.1.0"
+description = "EstimatePro – Desktop Estimating App"
+authors = []
+edition = "2021"
+
+[lib]
+name = "estimator_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.10.3", features = ["devtools"] }
+tauri-plugin-sql    = { version = "2.2.0", features = ["sqlite"] }
+tauri-plugin-dialog = { version = "2" }
+tauri-plugin-fs      = { version = "2" }
+tauri-plugin-updater = { version = "2" }
+tauri-plugin-process = { version = "2" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+zip = { version = "0.6", default-features = false, features = ["deflate", "bzip2", "time"] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

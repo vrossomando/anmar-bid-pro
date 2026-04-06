@@ -1,0 +1,182 @@
+/* ================================================================
+   Anmar Bid Pro – Light Theme Design System
+   Clean, professional, easy to read
+   ================================================================ */
+
+:root {
+  /* Core palette — light backgrounds */
+  --bg-deep:        #e8edf2;
+  --bg-surface:     #f4f6f9;
+  --bg-raised:      #ffffff;
+  --bg-hover:       #e2e8f0;
+  --bg-active:      #d4dce8;
+
+  --border:         rgba(0,0,0,0.10);
+  --border-strong:  rgba(0,0,0,0.18);
+
+  --text-primary:   #1a2332;
+  --text-secondary: #445568;
+  --text-muted:     #7a90a4;
+
+  --accent:         #1a56db;        /* professional blue */
+  --accent-dim:     rgba(26,86,219,0.12);
+  --accent-hover:   #1648c0;
+  --accent-light:   #e8f0fe;
+
+  --green:          #16a34a;
+  --green-dim:      rgba(22,163,74,0.12);
+  --red:            #dc2626;
+  --red-dim:        rgba(220,38,38,0.10);
+  --blue:           #2563eb;
+  --blue-dim:       rgba(37,99,235,0.12);
+  --amber:          #d97706;
+  --amber-dim:      rgba(217,119,6,0.12);
+
+  /* Typography */
+  --font-display:   'DM Serif Display', Georgia, serif;
+  --font-body:      'DM Sans', system-ui, sans-serif;
+  --font-mono:      'DM Mono', 'Fira Code', monospace;
+
+  /* Spacing scale */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Radius */
+  --r-sm:  5px;
+  --r-md:  8px;
+  --r-lg:  12px;
+  --r-xl:  18px;
+
+  /* Shadows — subtle for light theme */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.10);
+  --shadow-accent: 0 0 0 3px rgba(26,86,219,0.20);
+
+  /* Transitions */
+  --t-fast: 120ms ease;
+  --t-base: 200ms ease;
+  --t-slow: 350ms cubic-bezier(0.16,1,0.3,1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar        { width: 7px; height: 7px; }
+::-webkit-scrollbar-track  { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb  { background: #c0cdd8; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #a0b0bf; }
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* ── Inputs & Selects ── */
+input, select, textarea {
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: var(--sp-2) var(--sp-3);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  width: 100%;
+  user-select: text;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+select option {
+  background: var(--bg-raised);
+  color: var(--text-primary);
+}
+
+/* ── Buttons ── */
+button {
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-4);
+  transition: all var(--t-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+
+button:active { transform: translateY(1px); }
+
+/* ── Utility ── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(26,86,219,0.35); }
+  70%  { box-shadow: 0 0 0 8px rgba(26,86,219,0); }
+  100% { box-shadow: 0 0 0 0 rgba(26,86,219,0); }
+}
+
+.animate-fade  { animation: fadeIn  var(--t-slow) both; }
+.animate-slide { animation: slideIn var(--t-slow) both; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
