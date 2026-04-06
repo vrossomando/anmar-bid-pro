@@ -29,49 +29,30 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": [
+      "nsis",
+      "msi"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "publisher": "Anmar Electric",
-    "copyright": "© 2026 Anmar Electric",
-    "category": "Business",
-    "shortDescription": "Electrical estimating application",
-    "longDescription": "Professional electrical estimating software for Anmar Electric",
-    "windows": {
-      "digestAlgorithm": "sha256",
-      "certificateThumbprint": null,
-      "webviewInstallMode": {
-        "type": "downloadBootstrapper"
-      }
-    },
-    "nsis": {
-      "displayLanguageSelector": false,
-      "installerIcon": "icons/icon.ico",
-      "headerImage": "icons/128x128.png",
-      "sidebarImage": "icons/128x128.png",
-      "shortcutName": "Anmar Bid Pro",
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+    ]
   },
   "plugins": {
     "sql": {
-      "preloadConnections": ["sqlite:anmarbidpro.db"]
+      "preloadConnections": [
+        "sqlite:anmarbidpro.db"
+      ]
     },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI3NUQ4NTdEMUI3RUU4N0YKUldSLzZINGJmWVZkSjFRcDJkOFUxV0JHZ01oRlBIVktjT2J6d0xWTzFLbjc5WDNManVFVmlvZEoK",
       "endpoints": [
-        "https://github.com/AnmarElectric/anmar-bid-pro/releases/latest/download/latest.json"
+        "https://github.com/vrossomando/anmar-bid-pro/releases/latest/download/latest.json"
       ],
-      "dialog": true,
-      "windows": {
-        "installMode": "passive"
-      }
+      "dialog": true
     }
   }
 }
