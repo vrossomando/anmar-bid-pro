@@ -64,7 +64,7 @@
       "preloadConnections": ["sqlite:anmarbidpro.db"]
     },
     "updater": {
-      "pubkey": "PLACEHOLDER_PUBKEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI3NUQ4NTdEMUI3RUU4N0YKUldSLzZINGJmWVZkSjFRcDJkOFUxV0JHZ01oRlBIVktjT2J6d0xWTzFLbjc5WDNManVFVmlvZEoK",
       "endpoints": [
         "https://github.com/AnmarElectric/anmar-bid-pro/releases/latest/download/latest.json"
       ],

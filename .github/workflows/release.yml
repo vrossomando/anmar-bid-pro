@@ -1,8 +1,5 @@
 name: Release Anmar Bid Pro
 
-# Triggers:
-#   - Push a tag like v1.0.0, v1.2.3 → builds installer + creates GitHub Release
-#   - Manual trigger from GitHub Actions tab (for testing)
 on:
   push:
     tags:
@@ -20,51 +17,29 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # ── 1. Check out source code ───────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 2. Set up Node.js (for Vite/React build) ──────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: estimator-app/package-lock.json
 
-      # ── 3. Set up Rust (for Tauri backend) ────────────────────────────────
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
 
-      # Cache Rust build artifacts to speed up subsequent builds
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: estimator-app/src-tauri
 
-      # ── 4. Install Node dependencies ──────────────────────────────────────
       - name: Install Node dependencies
         working-directory: estimator-app
         run: npm ci
 
-      # ── 5. Build the Tauri app + create installer ─────────────────────────
       - name: Build Tauri app
-        working-directory: estimator-app
-        env:
-          # Updater signing key (stored as a GitHub secret)
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npm run tauri build
-
-      # ── 6. Find the built installer files ─────────────────────────────────
-      - name: List build artifacts
-        run: |
-          Get-ChildItem -Path "estimator-app/src-tauri/target/release/bundle" -Recurse -Include "*.exe","*.msi" | Select-Object FullName
-
-      # ── 7. Upload to GitHub Release ────────────────────────────────────────
-      - name: Create GitHub Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,17 +50,15 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Anmar Bid Pro ${{ github.ref_name }}'
           releaseBody: |
-            ## What's new in this release
-            
-            See commit history for details.
-            
-            ## Installation
-            
-            1. Download `Anmar_Bid_Pro_${{ github.ref_name }}_x64-setup.exe` below
-            2. Run the installer (click "More info" → "Run anyway" if Windows warns you)
+            ## Anmar Bid Pro ${{ github.ref_name }}
+
+            ### Installation
+            1. Download `Anmar.Bid.Pro_${{ github.ref_name }}_x64-setup.exe` below
+            2. Run the installer — click "More info" then "Run anyway" if Windows warns you
             3. Launch from Start Menu or Desktop shortcut
-            
-            **Existing users:** Your data is preserved automatically.
+
+            **Existing users:** Your jobs and data are preserved automatically.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
