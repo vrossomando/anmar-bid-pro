@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { version as APP_VERSION } from "../package.json";
 import MenuBar from "./components/MenuBar";
 import ProjectEditor from "./pages/ProjectEditor";
 import NoJobView from "./pages/NoJobView";
@@ -496,7 +497,7 @@ New job name:`, `${activeProject.name} (Copy)`);
       <div style={{ height: 22, background: "linear-gradient(to right, #1a3a6a, #2a5aa0)", display: "flex", alignItems: "center", paddingInline: 12, gap: 16, flexShrink: 0 }}>
         <StatusCell>{activeProject ? `${activeProject.bid_number ? `#${activeProject.bid_number} · ` : ""}${activeProject.name}` : "No job open"}</StatusCell>
         <StatusCell>{activeProject ? `Client: ${activeProject.client || "—"}` : `${projects.length} jobs on file`}</StatusCell>
-        <StatusCell style={{ marginLeft: "auto" }}>Anmar Bid Pro v1.0</StatusCell>
+        <StatusCell style={{ marginLeft: "auto" }}>Anmar Bid Pro v{APP_VERSION}</StatusCell>
       </div>
 
       {/* ── Modals ── */}

@@ -1892,9 +1892,11 @@ function TotalsBySectionReport({ items, cfg, rate }: {
     let material = 0, laborHrs = 0, laborCost = 0;
     for (const item of sItems) {
       if (item.unit_cost === 0 && item.qty > 0) continue; // skip quote items
-      material  += item.ext_material ?? (item.qty * item.unit_cost * (1 + (item.markup_pct ?? 0) / 100));
-      laborHrs  += item.labor_hours ?? 0;
-      laborCost += item.ext_labor ?? ((item.labor_hours ?? 0) * rate);
+      const mat = extMat(item) * (1 + (item.markup_pct ?? 0) / 100);
+      const hrs = extLaborHrs(item);
+      material  += mat;
+      laborHrs  += hrs;
+      laborCost += hrs * rate;
     }
     return { material, laborHrs, laborCost };
   }
