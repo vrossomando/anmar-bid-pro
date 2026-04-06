@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g. 1.0.0)'
+        description: 'Version to build (e.g. 1.0.2)'
         required: true
-        default: '1.0.0'
+        default: '1.0.2'
 
 jobs:
   build-windows:
@@ -56,10 +56,55 @@ jobs:
           releaseBody: |
             ## Anmar Bid Pro ${{ github.ref_name }}
             ### Installation
-            1. Download `Anmar Bid Pro_1.0.0_x64-setup.exe` below
+            1. Download `Anmar.Bid.Pro_${{ github.ref_name }}_x64-setup.exe` below
             2. Run it — click "More info" then "Run anyway" if Windows warns you
             3. Launch from Start Menu or Desktop shortcut
             **Existing users:** Your jobs and data are preserved automatically.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
+      - name: Generate and upload latest.json for auto-updater
+        shell: pwsh
+        run: |
+          $tag     = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          $repo    = "${{ github.repository }}"
+          $date    = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+
+          # Read the .sig file for the NSIS zip (this is the signature the updater verifies)
+          $sigPath = "src-tauri/target/release/bundle/nsis/Anmar Bid Pro_${version}_x64-setup.nsis.zip.sig"
+          $sig = ""
+          if (Test-Path $sigPath) {
+            $sig = (Get-Content $sigPath -Raw).Trim()
+            Write-Host "Found sig: $sig"
+          } else {
+            Write-Host "WARNING: sig file not found at $sigPath"
+            # List what's in the bundle directory
+            Get-ChildItem "src-tauri/target/release/bundle/nsis/" | Select-Object Name
+          }
+
+          $url = "https://github.com/$repo/releases/download/$tag/Anmar.Bid.Pro_${version}_x64-setup.nsis.zip"
+
+          # Tauri updater v2 latest.json format
+          $json = @{
+            version   = $version
+            notes     = "Anmar Bid Pro $tag - Bug fixes and improvements"
+            pub_date  = $date
+            platforms = @{
+              "windows-x86_64" = @{
+                signature = $sig
+                url       = $url
+              }
+            }
+          } | ConvertTo-Json -Depth 5 -Compress
+
+          Write-Host "latest.json content:"
+          Write-Host $json
+
+          $json | Out-File -FilePath "latest.json" -Encoding utf8NoBOM
+
+          # Upload to the release
+          gh release upload $tag "latest.json" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
