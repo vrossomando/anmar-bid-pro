@@ -19,3 +19,6 @@ Thumbs.db
 .idea/
 *.suo
 *.user
+
+# Force fresh Cargo dependency resolution on CI
+src-tauri/Cargo.lock

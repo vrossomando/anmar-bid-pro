@@ -30,10 +30,14 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
+      - name: Delete Cargo.lock to force fresh dependency resolution
+        run: Remove-Item -Path "src-tauri/Cargo.lock" -ErrorAction SilentlyContinue
+
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          cache-on-failure: true
 
       - name: Install Node dependencies
         run: npm ci
