@@ -45,6 +45,7 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app
+        id: tauri
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,10 +57,47 @@ jobs:
           releaseBody: |
             ## Anmar Bid Pro ${{ github.ref_name }}
             ### Installation
-            1. Download `Anmar Bid Pro_1.0.0_x64-setup.exe` below
+            1. Download `Anmar.Bid.Pro_${{ github.ref_name }}_x64-setup.exe` below
             2. Run it — click "More info" then "Run anyway" if Windows warns you
             3. Launch from Start Menu or Desktop shortcut
             **Existing users:** Your jobs and data are preserved automatically.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
+      - name: Upload latest.json for updater
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $nsis = "src-tauri/target/release/bundle/nsis/Anmar Bid Pro_${version}_x64-setup.nsis.zip"
+          $nsis_sig = "src-tauri/target/release/bundle/nsis/Anmar Bid Pro_${version}_x64-setup.nsis.zip.sig"
+          $msi = "src-tauri/target/release/bundle/msi/Anmar Bid Pro_${version}_x64_en-US.msi.zip"
+          $msi_sig = "src-tauri/target/release/bundle/msi/Anmar Bid Pro_${version}_x64_en-US.msi.zip.sig"
+
+          $nsis_sig_content = ""
+          $msi_sig_content = ""
+
+          if (Test-Path $nsis_sig) { $nsis_sig_content = Get-Content $nsis_sig -Raw }
+          if (Test-Path $msi_sig)  { $msi_sig_content  = Get-Content $msi_sig  -Raw }
+
+          $tag = "${{ github.ref_name }}"
+          $repo = "${{ github.repository }}"
+
+          $latest = @{
+            version = $version
+            notes = "Anmar Bid Pro $tag"
+            pub_date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            platforms = @{
+              "windows-x86_64" = @{
+                signature = $nsis_sig_content.Trim()
+                url = "https://github.com/$repo/releases/download/$tag/Anmar Bid Pro_${version}_x64-setup.nsis.zip"
+              }
+            }
+          }
+
+          $latest | ConvertTo-Json -Depth 5 | Out-File -FilePath "latest.json" -Encoding utf8
+          cat latest.json
+
+          gh release upload $tag latest.json --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
