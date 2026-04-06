@@ -318,8 +318,9 @@ async fn restore_database_dialog(app: tauri::AppHandle) -> Result<String, String
 
 
 // ── Migration checksum patcher ─────────────────────────────────────────────
-// Seed SQL files may be modified after a DB is created. This patches stored
-// SHA-384 checksums to match current files so existing DBs keep working.
+// Computes SHA-384 of each migration's actual SQL at runtime and updates
+// any stored checksums that don't match. This handles cases where SQL was
+// modified after a database was created, preventing checksum mismatch errors.
 fn patch_migration_checksums(db_path: &str) {
     let conn = match rusqlite::Connection::open(db_path) {
         Ok(c) => c,
@@ -335,30 +336,27 @@ fn patch_migration_checksums(db_path: &str) {
 
     if !table_exists { return; }
 
-    // version -> current SHA-384 hex of our SQL files
-    let checksums: &[(i64, &str)] = &[
-        (2,  "9f9e4d55d192fa94dc4597a8dc6fbe73bf29494069322cb82d0fd7ca114a3024ab4c9b8a0c1a1ad9a7d0f4f057aa2ef9"),
-        (5,  "2c86a58b0ed3a8df253b6a7f100314d4b3130573fdf0b28059200721a0cfb77241fb86ad401f3b1c95ac3a6b74d9e0d4"),
-        (6,  "0dc3e183a125f44c7f714da502587be818bfebe60542c682b42ca8a427f3a9840c8c208f08d755920dfc67a6b277f0ad"),
-        (8,  "2c8b84defe2403c764ab26fb35f9632ef741cb4d04c7af526fdcc85ca5ea68995f147906408d1462ff4733982823e1a5"),
-        (12, "d0bf7fa13e910f2e8d5a1f3d6c8e4d4c72c3e6c4fbedf8920f1475a81f3a2fbd425cd86286a5b3a7e24fb0046183f90c"),
-        (13, "9de9a99a7a3ac774a1be0b218cf3ab36fab829ef509466ffc590589fbfa1beec2fa6b71fe113ab59f182fb15770270da"),
-    ];
-
-    for (version, hex) in checksums {
-        let new_bytes: Vec<u8> = (0..hex.len()).step_by(2)
-            .map(|i| u8::from_str_radix(&hex[i..i+2], 16).unwrap_or(0))
-            .collect();
+    // Compute actual checksums from the migrations we have compiled in
+    // This way we always patch to whatever the binary actually contains
+    use sha2::{Sha384, Digest};
+    
+    for migration in migrations() {
+        let version = migration.version as i64;
+        let mut hasher = Sha384::new();
+        hasher.update(migration.sql.as_bytes());
+        let computed: Vec<u8> = hasher.finalize().to_vec();
+        
         let current: Option<Vec<u8>> = conn.query_row(
             "SELECT checksum FROM _sqlx_migrations WHERE version = ?1",
             rusqlite::params![version],
             |row| row.get(0),
         ).ok();
+        
         if let Some(cur) = current {
-            if cur != new_bytes {
+            if cur != computed {
                 let _ = conn.execute(
                     "UPDATE _sqlx_migrations SET checksum = ?1 WHERE version = ?2",
-                    rusqlite::params![new_bytes, version],
+                    rusqlite::params![computed, version],
                 );
             }
         }
