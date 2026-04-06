@@ -33,10 +33,9 @@ jobs:
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: estimator-app/src-tauri
+          workspaces: src-tauri
 
       - name: Install Node dependencies
-        working-directory: estimator-app
         run: npm ci
 
       - name: Build Tauri app
@@ -46,19 +45,15 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          projectPath: estimator-app
           tagName: ${{ github.ref_name }}
           releaseName: 'Anmar Bid Pro ${{ github.ref_name }}'
           releaseBody: |
             ## Anmar Bid Pro ${{ github.ref_name }}
-
             ### Installation
-            1. Download `Anmar.Bid.Pro_${{ github.ref_name }}_x64-setup.exe` below
-            2. Run the installer — click "More info" then "Run anyway" if Windows warns you
+            1. Download the .exe installer file below
+            2. Run it — click "More info" then "Run anyway" if Windows warns you
             3. Launch from Start Menu or Desktop shortcut
-
             **Existing users:** Your jobs and data are preserved automatically.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
-
